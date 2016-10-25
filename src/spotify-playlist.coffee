@@ -80,50 +80,63 @@ module.exports = (robot) ->
   # Spotify Web API Functions
 
   addTrack = (res) ->
-    res.http("https://api.spotify.com/v1/users/" + process.env.SPOTIFY_USER_ID + "/playlists/" + process.env.SPOTIFY_PLAYLIST_ID + "/tracks?uris=spotify%3Atrack%3A" + res.match[1])
-      .header("Authorization", "Bearer " + robot.brain.get('access_token'))
-      .header('Content-Type', 'application/json')
-      .header('Accept', 'application/json')
-      .post() (err, resp, body) =>
-        response = JSON.parse(body)
-        if response.snapshot_id
-          res.send "Track added"
+    if robot.auth.hasRole(msg.envelope.user, "dj")
+      res.http("https://api.spotify.com/v1/users/" + process.env.SPOTIFY_USER_ID + "/playlists/" + process.env.SPOTIFY_PLAYLIST_ID + "/tracks?uris=spotify%3Atrack%3A" + res.match[1])
+        .header("Authorization", "Bearer " + robot.brain.get('access_token'))
+        .header('Content-Type', 'application/json')
+        .header('Accept', 'application/json')
+        .post() (err, resp, body) =>
+          response = JSON.parse(body)
+          if response.snapshot_id
+            res.send "Track added"
+    else
+        msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
   findAndAddFirstTrack = (res, token) ->
-    res.http("https://api.spotify.com/v1/search?q=" + res.match[1] + "&type=track&market=US&limit=1")
-      .header("Authorization", "Bearer " + token)
-      .header('Accept', 'application/json')
-      .get() (err, resp, body) =>
-        response = JSON.parse body
-        for item in response.tracks.items
-          res.match[1] = item.id
-        authorizeAppUser(res, addTrack)
+    if robot.auth.hasRole(msg.envelope.user, "dj")
+      res.http("https://api.spotify.com/v1/search?q=" + res.match[1] + "&type=track&market=US&limit=1")
+        .header("Authorization", "Bearer " + token)
+        .header('Accept', 'application/json')
+        .get() (err, resp, body) =>
+          response = JSON.parse body
+          for item in response.tracks.items
+            res.match[1] = item.id
+          authorizeAppUser(res, addTrack)
+    else
+      msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
   removeTrack = (res) ->
-    data = JSON.stringify({
-      tracks: [
-        uri : "spotify:track:" + res.match[1]
-      ]
-    })
-    res.http("https://api.spotify.com/v1/users/" + process.env.SPOTIFY_USER_ID + "/playlists/" + process.env.SPOTIFY_PLAYLIST_ID + "/tracks")
-      .header("Authorization", "Bearer " + robot.brain.get('access_token'))
-      .header('Content-Type', 'application/json')
-      .delete(data) (err, resp, body) =>
-        response = JSON.parse(body)
-        if response.snapshot_id
-          res.send "Track removed"
+    if robot.auth.hasRole(msg.envelope.user, "dj")
+      data = JSON.stringify({
+        tracks: [
+          uri : "spotify:track:" + res.match[1]
+        ]
+      })
+      res.http("https://api.spotify.com/v1/users/" + process.env.SPOTIFY_USER_ID + "/playlists/" + process.env.SPOTIFY_PLAYLIST_ID + "/tracks")
+        .header("Authorization", "Bearer " + robot.brain.get('access_token'))
+        .header('Content-Type', 'application/json')
+        .delete(data) (err, resp, body) =>
+          response = JSON.parse(body)
+          if response.snapshot_id
+            res.send "Track removed"
+     else
+        msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
   findTrack = (res, token) ->
-    res.http("https://api.spotify.com/v1/search?q=" + res.match[1] + "&type=track&market=US&limit=10")
-      .header("Authorization", "Bearer " + token)
-      .header('Accept', 'application/json')
-      .get() (err, resp, body) =>
-        response = JSON.parse body
-        string = ""
-        for item in response.tracks.items
-          string = string + "#{item.name} - #{item.artists[0].name} - #{item.album.name} - #{item.id} \n"
-        res.send string
+    if robot.auth.hasRole(msg.envelope.user, "dj")
+      res.http("https://api.spotify.com/v1/search?q=" + res.match[1] + "&type=track&market=US&limit=10")
+        .header("Authorization", "Bearer " + token)
+        .header('Accept', 'application/json')
+        .get() (err, resp, body) =>
+          response = JSON.parse body
+          string = ""
+          for item in response.tracks.items
+            string = string + "#{item.name} - #{item.artists[0].name} - #{item.album.name} - #{item.id} \n"
+          res.send string
+     else
+        msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
+        
   robot.hear /playlist add (.*)/i, (res) ->
     authorizeApp(res, findAndAddFirstTrack)
 
