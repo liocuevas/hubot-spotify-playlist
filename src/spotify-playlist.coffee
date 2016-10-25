@@ -80,7 +80,7 @@ module.exports = (robot) ->
   # Spotify Web API Functions
 
   addTrack = (res) ->
-    if robot.auth.hasRole(msg.envelope.user, "dj")
+    if robot.auth.hasRole(res.envelope.user, "dj")
       res.http("https://api.spotify.com/v1/users/" + process.env.SPOTIFY_USER_ID + "/playlists/" + process.env.SPOTIFY_PLAYLIST_ID + "/tracks?uris=spotify%3Atrack%3A" + res.match[1])
         .header("Authorization", "Bearer " + robot.brain.get('access_token'))
         .header('Content-Type', 'application/json')
@@ -90,10 +90,10 @@ module.exports = (robot) ->
           if response.snapshot_id
             res.send "Track added"
     else
-        msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
+        res.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
   findAndAddFirstTrack = (res, token) ->
-    if robot.auth.hasRole(msg.envelope.user, "dj")
+    if robot.auth.hasRole(res.envelope.user, "dj")
       res.http("https://api.spotify.com/v1/search?q=" + res.match[1] + "&type=track&market=US&limit=1")
         .header("Authorization", "Bearer " + token)
         .header('Accept', 'application/json')
@@ -103,10 +103,10 @@ module.exports = (robot) ->
             res.match[1] = item.id
           authorizeAppUser(res, addTrack)
     else
-      msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
+      res.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
   removeTrack = (res) ->
-    if robot.auth.hasRole(msg.envelope.user, "dj")
+    if robot.auth.hasRole(res.envelope.user, "dj")
       data = JSON.stringify({
         tracks: [
           uri : "spotify:track:" + res.match[1]
@@ -120,10 +120,10 @@ module.exports = (robot) ->
           if response.snapshot_id
             res.send "Track removed"
      else
-        msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
+        res.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
   findTrack = (res, token) ->
-    if robot.auth.hasRole(msg.envelope.user, "dj")
+    if robot.auth.hasRole(res.envelope.user, "dj")
       res.http("https://api.spotify.com/v1/search?q=" + res.match[1] + "&type=track&market=US&limit=10")
         .header("Authorization", "Bearer " + token)
         .header('Accept', 'application/json')
@@ -134,9 +134,9 @@ module.exports = (robot) ->
             string = string + "#{item.name} - #{item.artists[0].name} - #{item.album.name} - #{item.id} \n"
           res.send string
      else
-        msg.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
+        res.send "I'm sorry, you don't have permissions to give me orders. But maybe @Lio does.... (my admin :$) ask him and try again."
 
-        
+
   robot.hear /playlist add (.*)/i, (res) ->
     authorizeApp(res, findAndAddFirstTrack)
 
